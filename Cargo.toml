@@ -1,9 +1,9 @@
 [package]
-name = "nid"
-version = "3.0.0"
+name = "psc-nanoid"
+version = "3.1.0"
 edition = "2021"
-description = "Generate and parse Nano IDs"
-repository = "https://github.com/ciffelia/nid"
+description = "Fork of nid crate"
+repository = "https://github.com/pathscale/psc-nanoid"
 license = "MIT OR Apache-2.0"
 keywords = ["nanoid", "unique", "nano", "id", "uuid"]
 categories = ["data-structures", "parser-implementations"]
