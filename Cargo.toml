@@ -1,10 +1,9 @@
 [package]
-name = "nid"
-version = "3.0.0"
+name = "psc-nanoid"
+version = "3.1.0"
 edition = "2021"
-rust-version = "1.61"
-description = "Generate and parse Nano IDs"
-repository = "https://github.com/ciffelia/nid"
+description = "Fork of nid crate"
+repository = "https://github.com/pathscale/psc-nanoid"
 license = "MIT OR Apache-2.0"
 keywords = ["nanoid", "unique", "nano", "id", "uuid"]
 categories = ["data-structures", "parser-implementations"]
@@ -19,7 +18,15 @@ thiserror = "1.0"
 serde = { version = "1.0", optional = true }
 rand = "0.8.5"
 zeroize = { version = "1.7", features = ["zeroize_derive"], optional = true }
+rkyv = { version = "0.8", optional = true }
 
 [dev-dependencies]
 serde_json = "1.0"
 pretty_assertions = "1.4"
+
+[features]
+packed = []
+rkyv = ["dep:rkyv"]
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(doc_auto_cfg)'] }
