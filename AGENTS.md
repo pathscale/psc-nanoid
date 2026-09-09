@@ -9,6 +9,13 @@ natively, and Claude Code loads it through the `@AGENTS.md` import in
 
 ## Invariants (don't break these)
 
+- **No Python.** Not a script, not `python3 -c`, not a heredoc. Reaching for it is the
+  tell that a step is being solved by parsing when the tool that owns the answer could
+  just be asked. Do not swap it for another parser either, and do not assume `jq` is
+  present: it does not ship with macOS. A fixed-shape field is one `sed -nE` line;
+  anything needing real parsing belongs in this repo's own language, where it can be
+  tested. If a task seems to need Python, the approach is wrong.
+
 - **Keep `cargo fmt` and `cargo clippy --all-targets` clean.** Lint failures are part of the build here, not advisory.
 - **Publishing to crates.io is irreversible.** A version number can never be reused, and yanking does not delete. Run `cargo publish --dry-run` first, publish from the merged default branch, and tag the release.
 - **A pre-release version (`-alpha`, `-beta`) needs an exact dependency pin.** A plain `"2.0"` requirement will not match `2.0.0-alpha.1`, so consumers must be bumped deliberately.
