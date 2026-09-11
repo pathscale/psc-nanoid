@@ -13,8 +13,13 @@ requires the default `std` feature. `rkyv`, `serde`, `packed` and `zeroize` can
 all be enabled without `std`.
 
 ```toml
-psc-nanoid = { version = "^3.1.2", default-features = false, features = ["packed", "rkyv"] }
+psc-nanoid = { version = "^3.2.0", default-features = false, features = ["packed", "rkyv"] }
 ```
+
+Archive deserialization validates the alphabet and packed size before returning an
+identifier. Custom rkyv deserializers must use an error implementing
+`rkyv::rancor::Source` (the usual `rkyv::rancor::Error` does). This is a
+source constraint added in 3.2; the archived byte layout is unchanged.
 
 Nano ID is a small, secure, URL-friendly, unique string ID.
 Here's an example of a Nano ID:
@@ -32,7 +37,7 @@ Add the following to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-psc-nanoid = "^3.1.2"
+psc-nanoid = "^3.2.0"
 ```
 
 When you want a new Nano ID, you can generate one using the [`Nanoid::new`] method.

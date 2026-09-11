@@ -16,7 +16,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! psc-nanoid = "^3.1.2"
+//! psc-nanoid = "^3.2.0"
 //! ```
 //!
 //! When you want a new Nano ID, you can generate one using the [`Nanoid::new`] method.
@@ -379,12 +379,11 @@ where
 #[cfg(feature = "rkyv")]
 impl<const N: usize, A: Alphabet, D: rkyv::rancor::Fallible + ?Sized>
     rkyv::Deserialize<Nanoid<N, A>, D> for [u8; N]
+where
+    D::Error: rkyv::rancor::Source,
 {
     fn deserialize(&self, _: &mut D) -> Result<Nanoid<N, A>, D::Error> {
-        Ok(Nanoid {
-            inner: *self,
-            _marker: PhantomData,
-        })
+        Nanoid::try_from_bytes(self).map_err(rkyv::rancor::Source::new)
     }
 }
 

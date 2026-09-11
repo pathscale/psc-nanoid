@@ -23,6 +23,14 @@ use crate::Nanoid;
 /// An error that can occur during pack/unpack operations.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, thiserror::Error)]
 pub enum PackError {
+    /// The byte array does not match the identifier length and alphabet.
+    #[error("Packed identifier requires {expected} bytes, got {actual}")]
+    InvalidLength {
+        /// Required packed byte count.
+        expected: usize,
+        /// Supplied packed byte count.
+        actual: usize,
+    },
     /// The character is not in the [`Alphabet`] (during pack).
     #[error("Invalid character '{char}' at position {position}")]
     InvalidCharacter {
@@ -141,6 +149,7 @@ impl<const N: usize, const B: usize, A: AlphabetPackExt> PackedNanoid<N, B, A> {
     /// # Ok::<(), psc_nanoid::packed::PackError>(())
     /// ```
     pub fn pack(nanoid: &Nanoid<N, A>) -> Result<Self, PackError> {
+        Self::validate_length()?;
         let mut packed = [0u8; B];
         Self::pack_impl(&nanoid.inner, &mut packed)?;
         Ok(Self {
@@ -168,6 +177,7 @@ impl<const N: usize, const B: usize, A: AlphabetPackExt> PackedNanoid<N, B, A> {
     /// # Ok::<(), psc_nanoid::packed::PackError>(())
     /// ```
     pub fn unpack(&self) -> Result<Nanoid<N, A>, PackError> {
+        Self::validate_length()?;
         let mut chars = [0u8; N];
         Self::unpack_impl(&self.inner, &mut chars)?;
 
@@ -208,6 +218,20 @@ impl<const N: usize, const B: usize, A: AlphabetPackExt> PackedNanoid<N, B, A> {
             inner: bytes,
             _marker: PhantomData,
         }
+    }
+
+    fn validate_length() -> Result<(), PackError> {
+        let expected = N
+            .checked_mul(A::PACK_BITS)
+            .expect("packed size overflow")
+            .div_ceil(8);
+        if B != expected {
+            return Err(PackError::InvalidLength {
+                expected,
+                actual: B,
+            });
+        }
+        Ok(())
     }
 
     fn pack_impl(src: &[u8; N], dst: &mut [u8; B]) -> Result<(), PackError> {
@@ -293,12 +317,16 @@ where
 #[cfg(feature = "rkyv")]
 impl<const N: usize, const B: usize, A: Alphabet, D: rkyv::rancor::Fallible + ?Sized>
     rkyv::Deserialize<PackedNanoid<N, B, A>, D> for [u8; B]
+where
+    D::Error: rkyv::rancor::Source,
 {
     fn deserialize(&self, _: &mut D) -> Result<PackedNanoid<N, B, A>, D::Error> {
-        Ok(PackedNanoid {
+        let packed = PackedNanoid {
             inner: *self,
             _marker: PhantomData,
-        })
+        };
+        packed.unpack().map_err(rkyv::rancor::Source::new)?;
+        Ok(packed)
     }
 }
 
