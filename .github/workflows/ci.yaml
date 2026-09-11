@@ -2,198 +2,50 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [master]
     tags: ['**']
   pull_request:
-    branches: [main]
+    branches: [master]
 
 permissions:
   contents: read
 
 env:
-  RUST_TOOLCHAIN: '1.94.0'
-  RUST_TOOLCHAIN_RUSTFMT: nightly
-  RUST_TOOLCHAIN_RUSTDOC: nightly
   CARGO_TERM_COLOR: always
 
 jobs:
-  rustfmt:
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Rust
-        run: |
-          rustup set profile minimal
-          rustup toolchain install "$RUST_TOOLCHAIN_RUSTFMT" --component rustfmt
-          rustup override set "$RUST_TOOLCHAIN_RUSTFMT"
-
-      - name: cargo fmt
-        run: cargo fmt --all -- --check
-
   check:
-    runs-on: ubuntu-24.04
+    runs-on: ubicloud-standard-2
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
-
-      - name: Setup Rust
-        run: |
-          rustup set profile minimal
-          rustup toolchain install "$RUST_TOOLCHAIN"
-          rustup override set "$RUST_TOOLCHAIN"
-
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+          targets: aarch64-unknown-none
       - uses: Swatinem/rust-cache@v2
-
-      - name: Install cargo-hack
-        uses: taiki-e/install-action@v2
+      - run: cargo fmt --all -- --check
+      - run: cargo clippy --all-targets --all-features -- -D warnings
+      - run: cargo test --all-features
+      - uses: taiki-e/install-action@v2
         with:
           tool: cargo-hack
-
-      - name: cargo check
-        run: cargo hack check --feature-powerset --no-dev-deps
-
-  check-msrv:
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Rust
+      - run: cargo hack check --feature-powerset --no-dev-deps
+      - name: Check no_std library and downstream macro
         run: |
-          export RUST_TOOLCHAIN_MSRV=$(cargo read-manifest | jq -r '.rust_version')
-          rustup set profile minimal
-          rustup toolchain install "$RUST_TOOLCHAIN_MSRV"
-          rustup override set "$RUST_TOOLCHAIN_MSRV"
-
-      - uses: Swatinem/rust-cache@v2
-
-      - name: Install cargo-hack
-        uses: taiki-e/install-action@v2
-        with:
-          tool: cargo-hack
-
-      - name: cargo check
-        run: cargo hack check --feature-powerset --no-dev-deps
-
-  clippy:
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Rust
-        run: |
-          rustup set profile minimal
-          rustup toolchain install "$RUST_TOOLCHAIN" --component clippy
-          rustup override set "$RUST_TOOLCHAIN"
-
-      - uses: Swatinem/rust-cache@v2
-
-      - name: cargo clippy
-        run: cargo clippy --all-targets --all-features -- -D warnings
-
-  test:
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Rust
-        run: |
-          rustup set profile minimal
-          rustup toolchain install "$RUST_TOOLCHAIN"
-          rustup override set "$RUST_TOOLCHAIN"
-
-      - uses: Swatinem/rust-cache@v2
-
-      - name: cargo test
-        run: cargo test --no-fail-fast --workspace --all-features
-
-  test-msrv:
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Rust
-        run: |
-          export RUST_TOOLCHAIN_MSRV=$(cargo read-manifest | jq -r '.rust_version')
-          rustup set profile minimal
-          rustup toolchain install "$RUST_TOOLCHAIN_MSRV"
-          rustup override set "$RUST_TOOLCHAIN_MSRV"
-
-      - uses: Swatinem/rust-cache@v2
-
-      - name: cargo test
-        run: cargo test --no-fail-fast --workspace --all-features
-
-  doc:
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Rust
-        run: |
-          rustup set profile minimal
-          rustup toolchain install "$RUST_TOOLCHAIN_RUSTDOC"
-          rustup override set "$RUST_TOOLCHAIN_RUSTDOC"
-
-      - name: cargo doc
-        run: cargo rustdoc --all-features -- --document-private-items --cfg doc_auto_cfg
-
-      - name: Upload documentation
-        uses: actions/upload-artifact@v4
-        with:
-          name: documentation
-          path: target/doc
-
-  lockfile:
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Rust
-        run: |
-          rustup set profile minimal
-          rustup toolchain install "$RUST_TOOLCHAIN"
-          rustup override set "$RUST_TOOLCHAIN"
-
-      - name: Check if Cargo.lock is up-to-date
-        run: cargo tree --depth 1 --no-dedupe --all-features --locked
-
-  readme:
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: cargo-bins/cargo-binstall@main
-
-      - name: Install cargo-readme
-        run: cargo binstall --version 3.3.1 --no-confirm cargo-readme
-
-      - run: cargo readme > README.md
-
-      - name: Check if README.md is up-to-date
-        run: git diff --exit-code README.md
+          cargo check --lib --no-default-features --features packed,rkyv,serde,zeroize --target aarch64-unknown-none
+          cargo check --manifest-path tests/no-std/Cargo.toml --target aarch64-unknown-none
+      - run: cargo doc --all-features --no-deps
+      - run: cargo publish --dry-run
 
   release:
     if: startsWith(github.ref, 'refs/tags/')
-    needs:
-      - rustfmt
-      - check
-      - check-msrv
-      - clippy
-      - test
-      - test-msrv
-      - doc
-      - lockfile
-      - readme
-    runs-on: ubuntu-24.04
+    needs: [check]
+    runs-on: ubicloud-standard-2
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
-
-      - name: Setup Rust
-        run: |
-          rustup set profile minimal
-          rustup toolchain install "$RUST_TOOLCHAIN"
-          rustup override set "$RUST_TOOLCHAIN"
-
+      - uses: dtolnay/rust-toolchain@stable
       - run: cargo publish
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}

@@ -16,20 +16,20 @@
 //!
 //! ```toml
 //! [dependencies]
-//! nid = "3.0.0"
+//! psc-nanoid = "^3.1.2"
 //! ```
 //!
 //! When you want a new Nano ID, you can generate one using the [`Nanoid::new`] method.
 //!
 //! ```
-//! use nid::Nanoid;
+//! use psc_nanoid::Nanoid;
 //! let id: Nanoid = Nanoid::new();
 //! ```
 //!
-//! You can parse a string into a Nano ID using [`Nanoid::try_from_str`], [`std::str::FromStr`] or [`TryFrom<String>`].
+//! You can parse a string into a Nano ID using [`Nanoid::try_from_str`], [`core::str::FromStr`] or [`TryFrom<String>`].
 //!
 //! ```
-//! use nid::Nanoid;
+//! use psc_nanoid::Nanoid;
 //! let id: Nanoid = Nanoid::try_from_str("K8N4Q7MNmeHJ-OHHoVDcz")?;
 //! let id: Nanoid = "3hYR3muA_xvjMrrrqFWxF".parse()?;
 //! let id: Nanoid = "iH26rJ8CpRz-gfIh7TSRu".to_string().try_into()?;
@@ -39,7 +39,7 @@
 //! If the Nano ID string is constant, you can also use the [`nanoid`] macro to parse it at compile time.
 //!
 //! ```
-//! use nid::{nanoid, Nanoid};
+//! use psc_nanoid::{nanoid, Nanoid};
 //! let id = nanoid!("ClCrhcvy5kviH5ZozARfi");
 //! const ID: Nanoid = nanoid!("9vZZWqFI_rTou3Mutq1LH");
 //! ```
@@ -47,7 +47,7 @@
 //! The length of the Nano ID is 21 by default. You can change it by specifying the generic parameter.
 //!
 //! ```
-//! use nid::Nanoid;
+//! use psc_nanoid::Nanoid;
 //! let id: Nanoid<10> = "j1-SOTHHxi".parse()?;
 //! # Ok::<(), Box<dyn std::error::Error>>(())
 //! ```
@@ -55,14 +55,14 @@
 //! You can also use a different alphabet. The list of available alphabets is in the [`alphabet`] module.
 //!
 //! ```
-//! use nid::{alphabet::Base62Alphabet, Nanoid};
+//! use psc_nanoid::{alphabet::Base62Alphabet, Nanoid};
 //! let id: Nanoid<10, Base62Alphabet> = Nanoid::new();
 //! ```
 //!
 //! # Examples
 //!
 //! ```
-//! use nid::{alphabet::Base62Alphabet, Nanoid};
+//! use psc_nanoid::{alphabet::Base62Alphabet, Nanoid};
 //!
 //! // Generate a new Nano ID and print it.
 //! let id: Nanoid = Nanoid::new();
@@ -90,8 +90,15 @@
 //! This type provides a safe way to generate and parse Nano IDs.
 //! This is similar to [`uuid`](https://docs.rs/uuid) crate, which provides [`Uuid`](https://docs.rs/uuid/latest/uuid/struct.Uuid.html) type to represent UUIDs.
 
+#![cfg_attr(not(feature = "std"), no_std)]
 #![cfg_attr(doc_auto_cfg, feature(doc_cfg))]
 #![deny(missing_debug_implementations, missing_docs)]
+
+extern crate alloc;
+#[cfg(all(test, not(feature = "std")))]
+extern crate std;
+
+use alloc::{borrow::ToOwned, string::String};
 
 pub mod alphabet;
 #[cfg(feature = "packed")]
@@ -100,7 +107,7 @@ pub mod packed;
 #[cfg(feature = "packed")]
 pub use packed::PackedNanoid;
 
-use std::{marker::PhantomData, mem::MaybeUninit};
+use core::{marker::PhantomData, mem::MaybeUninit};
 
 use alphabet::{Alphabet, AlphabetExt, Base64UrlAlphabet};
 
@@ -116,16 +123,16 @@ use alphabet::{Alphabet, AlphabetExt, Base64UrlAlphabet};
 /// When you want a new Nano ID, you can generate one using the [`Nanoid::new`].
 ///
 /// ```
-/// use nid::Nanoid;
+/// use psc_nanoid::Nanoid;
 /// let id: Nanoid = Nanoid::new();
 /// ```
 ///
 /// # Parsing
 ///
-/// You can parse a string into a Nano ID using [`Nanoid::try_from_str`], [`std::str::FromStr`] or [`TryFrom<String>`].
+/// You can parse a string into a Nano ID using [`Nanoid::try_from_str`], [`core::str::FromStr`] or [`TryFrom<String>`].
 ///
 /// ```
-/// use nid::Nanoid;
+/// use psc_nanoid::Nanoid;
 /// let id: Nanoid = Nanoid::try_from_str("K8N4Q7MNmeHJ-OHHoVDcz")?;
 /// let id: Nanoid = "3hYR3muA_xvjMrrrqFWxF".parse()?;
 /// let id: Nanoid = "iH26rJ8CpRz-gfIh7TSRu".to_string().try_into()?;
@@ -135,7 +142,7 @@ use alphabet::{Alphabet, AlphabetExt, Base64UrlAlphabet};
 /// If you try to parse an invalid Nano ID, you will get an error.
 ///
 /// ```
-/// use nid::{Nanoid, ParseError};
+/// use psc_nanoid::{Nanoid, ParseError};
 ///
 /// let result: Result<Nanoid, _> = "61psxw-too_short".parse();
 /// assert!(matches!(result, Err(ParseError::InvalidLength { .. })));
@@ -146,10 +153,10 @@ use alphabet::{Alphabet, AlphabetExt, Base64UrlAlphabet};
 ///
 /// # Converting to a string
 ///
-/// You can get the string representation of the Nano ID using [`Nanoid::as_str`], [`AsRef<str>`] or [`Display`](std::fmt::Display).
+/// You can get the string representation of the Nano ID using [`Nanoid::as_str`], [`AsRef<str>`] or [`Display`](core::fmt::Display).
 ///
 /// ```
-/// use nid::Nanoid;
+/// use psc_nanoid::Nanoid;
 /// let id: Nanoid = "Z9ifKfmBL7j69naN7hthu".parse()?;
 ///
 /// // Convert to &str
@@ -164,7 +171,7 @@ use alphabet::{Alphabet, AlphabetExt, Base64UrlAlphabet};
 /// # Examples
 ///
 /// ```
-/// use nid::{alphabet::Base62Alphabet, Nanoid};
+/// use psc_nanoid::{alphabet::Base62Alphabet, Nanoid};
 ///
 /// // Generate a new Nano ID and print it.
 /// let id: Nanoid = Nanoid::new();
@@ -206,6 +213,9 @@ pub enum ParseError {
 impl<const N: usize, A: Alphabet> Nanoid<N, A> {
     /// Generate a new Nano ID using random number generator seeded by the system.
     ///
+    /// Available with the default `std` feature. Without it, use [`Self::new_with`]
+    /// and supply the random number generator.
+    ///
     /// # Panics
     ///
     /// The function will panic if the random number generator is not able to generate random numbers.
@@ -215,11 +225,12 @@ impl<const N: usize, A: Alphabet> Nanoid<N, A> {
     /// # Examples
     ///
     /// ```
-    /// use nid::Nanoid;
+    /// use psc_nanoid::Nanoid;
     /// let id: Nanoid = Nanoid::new();
     /// ```
     #[allow(clippy::new_without_default)]
     #[must_use]
+    #[cfg(feature = "std")]
     pub fn new() -> Self {
         Self::new_with(rand::thread_rng())
     }
@@ -235,7 +246,7 @@ impl<const N: usize, A: Alphabet> Nanoid<N, A> {
     /// # Examples
     ///
     /// ```
-    /// use nid::Nanoid;
+    /// use psc_nanoid::Nanoid;
     /// let id: Nanoid = Nanoid::new_with(rand::thread_rng());
     /// ```
     #[must_use]
@@ -275,7 +286,7 @@ impl<const N: usize, A: Alphabet> Nanoid<N, A> {
     /// # Examples
     ///
     /// ```
-    /// use nid::Nanoid;
+    /// use psc_nanoid::Nanoid;
     /// let id: Nanoid = Nanoid::try_from_str("r9p_QLd_9CD63JqQaGQ9I")?;
     /// # Ok::<(), Box<dyn std::error::Error>>(())
     /// ```
@@ -307,7 +318,7 @@ impl<const N: usize, A: Alphabet> Nanoid<N, A> {
     /// # Examples
     ///
     /// ```
-    /// use nid::Nanoid;
+    /// use psc_nanoid::Nanoid;
     /// let id: Nanoid = Nanoid::try_from_bytes(b"0tY_GxufiwmAxvmHR7G0R")?;
     /// # Ok::<(), Box<dyn std::error::Error>>(())
     /// ```
@@ -332,7 +343,7 @@ impl<const N: usize, A: Alphabet> Nanoid<N, A> {
     /// # Examples
     ///
     /// ```
-    /// use nid::Nanoid;
+    /// use psc_nanoid::Nanoid;
     /// let id: Nanoid = "vsB2sq2PfhCdU6WCXk37s".parse()?;
     /// assert_eq!(id.as_str(), "vsB2sq2PfhCdU6WCXk37s");
     /// # Ok::<(), Box<dyn std::error::Error>>(())
@@ -341,7 +352,7 @@ impl<const N: usize, A: Alphabet> Nanoid<N, A> {
     #[inline]
     pub const fn as_str(&self) -> &str {
         // SAFETY: all characters are ASCII.
-        unsafe { std::str::from_utf8_unchecked(&self.inner) }
+        unsafe { core::str::from_utf8_unchecked(&self.inner) }
     }
 }
 
@@ -399,15 +410,15 @@ impl<const N: usize, A: Alphabet> PartialEq for Nanoid<N, A> {
 impl<const N: usize, A: Alphabet> Eq for Nanoid<N, A> {}
 
 // `Hash` cannot be derived as well.
-impl<const N: usize, A: Alphabet> std::hash::Hash for Nanoid<N, A> {
-    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+impl<const N: usize, A: Alphabet> core::hash::Hash for Nanoid<N, A> {
+    fn hash<H: core::hash::Hasher>(&self, state: &mut H) {
         self.inner.hash(state);
     }
 }
 
 // `PartialOrd` cannot be derived as well.
 impl<const N: usize, A: Alphabet> PartialOrd for Nanoid<N, A> {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+    fn partial_cmp(&self, other: &Self) -> Option<core::cmp::Ordering> {
         Some(self.cmp(other))
     }
 }
@@ -415,19 +426,19 @@ impl<const N: usize, A: Alphabet> PartialOrd for Nanoid<N, A> {
 // `Ord` cannot be derived as well.
 impl<const N: usize, A: Alphabet> Ord for Nanoid<N, A> {
     #[inline]
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+    fn cmp(&self, other: &Self) -> core::cmp::Ordering {
         self.inner.cmp(&other.inner)
     }
 }
 
-impl<const N: usize, A: Alphabet> std::fmt::Debug for Nanoid<N, A> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl<const N: usize, A: Alphabet> core::fmt::Debug for Nanoid<N, A> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.debug_tuple("Nanoid").field(&self.as_str()).finish()
     }
 }
 
-impl<const N: usize, A: Alphabet> std::fmt::Display for Nanoid<N, A> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl<const N: usize, A: Alphabet> core::fmt::Display for Nanoid<N, A> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.write_str(self.as_str())
     }
 }
@@ -452,7 +463,7 @@ impl<const N: usize, A: Alphabet> TryFrom<String> for Nanoid<N, A> {
     }
 }
 
-impl<const N: usize, A: Alphabet> std::str::FromStr for Nanoid<N, A> {
+impl<const N: usize, A: Alphabet> core::str::FromStr for Nanoid<N, A> {
     type Err = ParseError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -494,7 +505,7 @@ impl<'de, const N: usize, A: Alphabet> serde::Deserialize<'de> for Nanoid<N, A> 
 /// # Examples
 ///
 /// ```
-/// use nid::{alphabet::Base62Alphabet, nanoid, Nanoid};
+/// use psc_nanoid::{alphabet::Base62Alphabet, nanoid, Nanoid};
 ///
 /// let id1 = nanoid!("F6JA-LPEbPpz71qxDjaId");
 /// const ID1: Nanoid = nanoid!("F6JA-LPEbPpz71qxDjaId");
@@ -513,19 +524,19 @@ impl<'de, const N: usize, A: Alphabet> serde::Deserialize<'de> for Nanoid<N, A> 
 /// If the provided string is not a valid Nano ID, the program will not compile.
 ///
 /// ```compile_fail
-/// use nid::nanoid;
+/// use psc_nanoid::nanoid;
 /// let id = nanoid!("abc###"); // Compilation error: the provided string has invalid character
 /// ```
 #[macro_export]
 macro_rules! nanoid {
     ($id:expr $(, $alphabet:ty)? $(,)?) => {{
-        const ID: $crate::Nanoid<{ $crate::std::primitive::str::as_bytes($id).len() }$(, $alphabet)?> = match $crate::Nanoid::try_from_str($id) {
-            $crate::std::result::Result::Ok(id) => id,
-            $crate::std::result::Result::Err($crate::ParseError::InvalidLength { .. }) => {
-                $crate::std::unreachable!()
+        const ID: $crate::Nanoid<{ $crate::__core::primitive::str::as_bytes($id).len() }$(, $alphabet)?> = match $crate::Nanoid::try_from_str($id) {
+            $crate::__core::result::Result::Ok(id) => id,
+            $crate::__core::result::Result::Err($crate::ParseError::InvalidLength { .. }) => {
+                $crate::__core::unreachable!()
             }
-            $crate::std::result::Result::Err($crate::ParseError::InvalidCharacter(_)) => {
-                $crate::std::panic!("the provided string has invalid character")
+            $crate::__core::result::Result::Err($crate::ParseError::InvalidCharacter(_)) => {
+                $crate::__core::panic!("the provided string has invalid character")
             }
         };
         ID
@@ -533,6 +544,9 @@ macro_rules! nanoid {
 }
 
 #[doc(hidden)]
+pub use core as __core;
+#[doc(hidden)]
+#[cfg(feature = "std")]
 pub use std;
 
 #[cfg(test)]
@@ -660,7 +674,7 @@ mod tests {
         fn inner<const N: usize, A: Alphabet>(s1: &str, s2: &str) {
             let id1: Nanoid<N, A> = s1.parse().unwrap();
             let id2: Nanoid<N, A> = s2.parse().unwrap();
-            assert_eq!(id1.partial_cmp(&id2), Some(std::cmp::Ordering::Less));
+            assert_eq!(id1.partial_cmp(&id2), Some(core::cmp::Ordering::Less));
         }
 
         inner::<21, Base64UrlAlphabet>("ABCDEFGHIJKLMNOPQRSTU", "ABCDEFGHIJKLMNOPQRSTV");
@@ -676,7 +690,7 @@ mod tests {
         fn inner<const N: usize, A: Alphabet>(s1: &str, s2: &str) {
             let id1: Nanoid<N, A> = s1.parse().unwrap();
             let id2: Nanoid<N, A> = s2.parse().unwrap();
-            assert_eq!(id1.cmp(&id2), std::cmp::Ordering::Greater);
+            assert_eq!(id1.cmp(&id2), core::cmp::Ordering::Greater);
         }
 
         inner::<21, Base64UrlAlphabet>("ABCDEFGHIJKLMNOPQRSTV", "ABCDEFGHIJKLMNOPQRSTU");

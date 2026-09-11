@@ -6,16 +6,16 @@
 //! # Example
 //!
 //! ```
-//! use nid::{Nanoid, alphabet::Base64UrlAlphabet, packed::PackedNanoid};
+//! use psc_nanoid::{Nanoid, alphabet::Base64UrlAlphabet, packed::PackedNanoid};
 //!
 //! let id: Nanoid<21, Base64UrlAlphabet> = Nanoid::new();
 //! let packed: PackedNanoid<21, 16, Base64UrlAlphabet> = PackedNanoid::pack(&id)?;
 //! let unpacked: Nanoid<21, Base64UrlAlphabet> = packed.unpack()?;
 //! assert_eq!(id, unpacked);
-//! # Ok::<(), nid::packed::PackError>(())
+//! # Ok::<(), psc_nanoid::packed::PackError>(())
 //! ```
 
-use std::marker::PhantomData;
+use core::marker::PhantomData;
 
 use crate::alphabet::{Alphabet, AlphabetExt};
 use crate::Nanoid;
@@ -104,7 +104,7 @@ impl<A: Alphabet + AlphabetExt> AlphabetPackExt for A {
 /// # Example
 ///
 /// ```
-/// use nid::{Nanoid, alphabet::Base64UrlAlphabet, packed::PackedNanoid};
+/// use psc_nanoid::{Nanoid, alphabet::Base64UrlAlphabet, packed::PackedNanoid};
 ///
 /// // A 21-character Base64Url Nano ID packs into 16 bytes
 /// let id: Nanoid<21, Base64UrlAlphabet> = "qjH-6uGrFy0QgNJtUh0_c".parse()?;
@@ -134,11 +134,11 @@ impl<const N: usize, const B: usize, A: AlphabetPackExt> PackedNanoid<N, B, A> {
     /// # Example
     ///
     /// ```
-    /// use nid::{Nanoid, alphabet::Base64UrlAlphabet, packed::PackedNanoid};
+    /// use psc_nanoid::{Nanoid, alphabet::Base64UrlAlphabet, packed::PackedNanoid};
     ///
     /// let id: Nanoid<21, Base64UrlAlphabet> = Nanoid::new();
     /// let packed: PackedNanoid<21, 16, Base64UrlAlphabet> = PackedNanoid::pack(&id)?;
-    /// # Ok::<(), nid::packed::PackError>(())
+    /// # Ok::<(), psc_nanoid::packed::PackError>(())
     /// ```
     pub fn pack(nanoid: &Nanoid<N, A>) -> Result<Self, PackError> {
         let mut packed = [0u8; B];
@@ -159,13 +159,13 @@ impl<const N: usize, const B: usize, A: AlphabetPackExt> PackedNanoid<N, B, A> {
     /// # Example
     ///
     /// ```
-    /// use nid::{Nanoid, alphabet::Base64UrlAlphabet, packed::PackedNanoid};
+    /// use psc_nanoid::{Nanoid, alphabet::Base64UrlAlphabet, packed::PackedNanoid};
     ///
     /// let id: Nanoid<21, Base64UrlAlphabet> = Nanoid::new();
     /// let packed: PackedNanoid<21, 16, Base64UrlAlphabet> = PackedNanoid::pack(&id)?;
     /// let unpacked: Nanoid<21, Base64UrlAlphabet> = packed.unpack()?;
     /// assert_eq!(id, unpacked);
-    /// # Ok::<(), nid::packed::PackError>(())
+    /// # Ok::<(), psc_nanoid::packed::PackError>(())
     /// ```
     pub fn unpack(&self) -> Result<Nanoid<N, A>, PackError> {
         let mut chars = [0u8; N];
@@ -183,12 +183,12 @@ impl<const N: usize, const B: usize, A: AlphabetPackExt> PackedNanoid<N, B, A> {
     /// # Example
     ///
     /// ```
-    /// use nid::{Nanoid, alphabet::Base64UrlAlphabet, packed::PackedNanoid};
+    /// use psc_nanoid::{Nanoid, alphabet::Base64UrlAlphabet, packed::PackedNanoid};
     ///
     /// let id: Nanoid<21, Base64UrlAlphabet> = Nanoid::new();
     /// let packed: PackedNanoid<21, 16, Base64UrlAlphabet> = PackedNanoid::pack(&id)?;
     /// let bytes: &[u8; 16] = packed.as_bytes();
-    /// # Ok::<(), nid::packed::PackError>(())
+    /// # Ok::<(), psc_nanoid::packed::PackError>(())
     /// ```
     #[must_use]
     #[inline]
@@ -327,27 +327,31 @@ impl<const N: usize, const B: usize, A: AlphabetPackExt> PartialEq for PackedNan
 
 impl<const N: usize, const B: usize, A: AlphabetPackExt> Eq for PackedNanoid<N, B, A> {}
 
-impl<const N: usize, const B: usize, A: AlphabetPackExt> std::hash::Hash for PackedNanoid<N, B, A> {
-    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+impl<const N: usize, const B: usize, A: AlphabetPackExt> core::hash::Hash
+    for PackedNanoid<N, B, A>
+{
+    fn hash<H: core::hash::Hasher>(&self, state: &mut H) {
         self.inner.hash(state);
     }
 }
 
 impl<const N: usize, const B: usize, A: AlphabetPackExt> PartialOrd for PackedNanoid<N, B, A> {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+    fn partial_cmp(&self, other: &Self) -> Option<core::cmp::Ordering> {
         Some(self.cmp(other))
     }
 }
 
 impl<const N: usize, const B: usize, A: AlphabetPackExt> Ord for PackedNanoid<N, B, A> {
     #[inline]
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+    fn cmp(&self, other: &Self) -> core::cmp::Ordering {
         self.inner.cmp(&other.inner)
     }
 }
 
-impl<const N: usize, const B: usize, A: AlphabetPackExt> std::fmt::Debug for PackedNanoid<N, B, A> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl<const N: usize, const B: usize, A: AlphabetPackExt> core::fmt::Debug
+    for PackedNanoid<N, B, A>
+{
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.debug_tuple("PackedNanoid").field(&self.inner).finish()
     }
 }
@@ -368,7 +372,7 @@ impl<const N: usize, const B: usize, A: AlphabetPackExt> AsRef<[u8; B]> for Pack
 /// # Example
 ///
 /// ```
-/// use nid::{alphabet::Base64UrlAlphabet, packed_nanoid_type};
+/// use psc_nanoid::{alphabet::Base64UrlAlphabet, packed_nanoid_type};
 ///
 /// // Creates type PackedNanoid<21, Base64UrlAlphabet, 16>
 /// // (21 * 6 bits = 126 bits = 16 bytes)
@@ -578,6 +582,7 @@ mod tests {
     #[cfg(feature = "rkyv")]
     #[cfg(test)]
     mod rkyv_tests {
+        use pretty_assertions::assert_eq;
         use rkyv::rancor::Error;
 
         use crate::alphabet::{Base16Alphabet, Base32Alphabet, Base64UrlAlphabet};

@@ -11,7 +11,7 @@
 //! # Examples
 //!
 //! ```rust
-//! use nid::{alphabet::{Base36Alphabet, Base58Alphabet}, Nanoid};
+//! use psc_nanoid::{alphabet::{Base36Alphabet, Base58Alphabet}, Nanoid};
 //!
 //! // Use the default Base64URL alphabet, which contains `A-Za-z0-9_-` symbols.
 //! type ShopId = Nanoid<9>;
@@ -41,7 +41,7 @@
 /// To implement a custom alphabet, you need to create a new type that implements the [`Alphabet`] trait.
 ///
 /// ```rust
-/// use nid::{alphabet::Alphabet, Nanoid};
+/// use psc_nanoid::{alphabet::Alphabet, Nanoid};
 ///
 /// struct CustomAlphabet;
 ///
@@ -57,7 +57,7 @@
 /// Note that the alphabet must contain only ASCII characters. If you use an alphabet with non-ASCII characters, the compilation error will occur.
 ///
 /// ```compile_fail
-/// use nid::{alphabet::Alphabet, Nanoid};
+/// use psc_nanoid::{alphabet::Alphabet, Nanoid};
 ///
 /// struct CustomAlphabet;
 ///
@@ -119,7 +119,7 @@ macro_rules! define_and_impl_alphabet {
  # Example
  
  ```rust
- use nid::{alphabet::", stringify!($name), ", Nanoid};
+ use psc_nanoid::{alphabet::", stringify!($name), ", Nanoid};
  let id: Nanoid<21, ", stringify!($name), "> = Nanoid::new();
  ```")]
         #[derive(Debug)]

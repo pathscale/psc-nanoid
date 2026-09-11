@@ -11,7 +11,7 @@ natively, and Claude Code loads it through the `@AGENTS.md` import in
 
 - **Keep `cargo fmt` and `cargo clippy --all-targets` clean.** Lint failures are part of the build here, not advisory.
 - **Publishing to crates.io is irreversible.** A version number can never be reused, and yanking does not delete. Run `cargo publish --dry-run` first, publish from the merged default branch, and tag the release.
-- **A pre-release version (`-alpha`, `-beta`) needs an exact dependency pin.** A plain `"2.0"` requirement will not match `2.0.0-alpha.1`, so consumers must be bumped deliberately.
+- **Use caret dependency requirements, including explicitly named prereleases.** Do not introduce exact pins or commit Cargo.lock. Record resolved versions in verification evidence.
 - **Docs describe what is true now.** If you change behaviour, update the README and any affected doc in the same change.
 
 ## Build & test
