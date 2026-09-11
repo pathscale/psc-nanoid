@@ -1,0 +1,11 @@
+[package]
+name = "psc-nanoid-no-std-consumer"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[workspace]
+
+[dependencies]
+psc-nanoid = { path = "../..", default-features = false, features = ["packed", "rkyv", "serde", "zeroize"] }
+rand = { version = "^0.8", default-features = false }

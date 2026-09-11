@@ -1,4 +1,4 @@
-# nid
+# psc-nanoid
 
 [![CI status][ci badge]][ci link]
 [![crates.io][crates.io badge]][crates.io link]
@@ -6,6 +6,15 @@
 [![Apache 2.0 or MIT Licenses][license badge]][license link]
 
 Generate and parse Nano IDs.
+
+Disable default features for `no_std` plus `alloc`. Parsing, the `nanoid!` macro,
+packing and `new_with(rng)` remain available; `new()` uses the host RNG and
+requires the default `std` feature. `rkyv`, `serde`, `packed` and `zeroize` can
+all be enabled without `std`.
+
+```toml
+psc-nanoid = { version = "^3.1.2", default-features = false, features = ["packed", "rkyv"] }
+```
 
 Nano ID is a small, secure, URL-friendly, unique string ID.
 Here's an example of a Nano ID:
@@ -23,20 +32,20 @@ Add the following to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-nid = "3.0.0"
+psc-nanoid = "^3.1.2"
 ```
 
 When you want a new Nano ID, you can generate one using the [`Nanoid::new`] method.
 
 ```rust
-use nid::Nanoid;
+use psc_nanoid::Nanoid;
 let id: Nanoid = Nanoid::new();
 ```
 
-You can parse a string into a Nano ID using [`Nanoid::try_from_str`], [`std::str::FromStr`] or [`TryFrom<String>`].
+You can parse a string into a Nano ID using [`Nanoid::try_from_str`], [`core::str::FromStr`] or [`TryFrom<String>`].
 
 ```rust
-use nid::Nanoid;
+use psc_nanoid::Nanoid;
 let id: Nanoid = Nanoid::try_from_str("K8N4Q7MNmeHJ-OHHoVDcz")?;
 let id: Nanoid = "3hYR3muA_xvjMrrrqFWxF".parse()?;
 let id: Nanoid = "iH26rJ8CpRz-gfIh7TSRu".to_string().try_into()?;
@@ -45,7 +54,7 @@ let id: Nanoid = "iH26rJ8CpRz-gfIh7TSRu".to_string().try_into()?;
 If the Nano ID string is constant, you can also use the [`nanoid`] macro to parse it at compile time.
 
 ```rust
-use nid::{nanoid, Nanoid};
+use psc_nanoid::{nanoid, Nanoid};
 let id = nanoid!("ClCrhcvy5kviH5ZozARfi");
 const ID: Nanoid = nanoid!("9vZZWqFI_rTou3Mutq1LH");
 ```
@@ -53,21 +62,21 @@ const ID: Nanoid = nanoid!("9vZZWqFI_rTou3Mutq1LH");
 The length of the Nano ID is 21 by default. You can change it by specifying the generic parameter.
 
 ```rust
-use nid::Nanoid;
+use psc_nanoid::Nanoid;
 let id: Nanoid<10> = "j1-SOTHHxi".parse()?;
 ```
 
 You can also use a different alphabet. The list of available alphabets is in the [`alphabet`] module.
 
 ```rust
-use nid::{alphabet::Base62Alphabet, Nanoid};
+use psc_nanoid::{alphabet::Base62Alphabet, Nanoid};
 let id: Nanoid<10, Base62Alphabet> = Nanoid::new();
 ```
 
 ## Examples
 
 ```rust
-use nid::{alphabet::Base62Alphabet, Nanoid};
+use psc_nanoid::{alphabet::Base62Alphabet, Nanoid};
 
 // Generate a new Nano ID and print it.
 let id: Nanoid = Nanoid::new();
@@ -93,13 +102,13 @@ The main difference between `nid` and the other implementations is that `nid` ha
 This type provides a safe way to generate and parse Nano IDs.
 This is similar to [`uuid`](https://docs.rs/uuid) crate, which provides [`Uuid`](https://docs.rs/uuid/latest/uuid/struct.Uuid.html) type to represent UUIDs.
 
-[`Nanoid::new`]: https://docs.rs/nid/latest/nid/struct.Nanoid.html#method.new
-[`Nanoid::try_from_str`]: https://docs.rs/nid/latest/nid/struct.Nanoid.html#method.try_from_str
-[`std::str::FromStr`]: https://doc.rust-lang.org/std/str/trait.FromStr.html
+[`Nanoid::new`]: https://docs.rs/psc-nanoid/latest/psc_nanoid/struct.Nanoid.html#method.new
+[`Nanoid::try_from_str`]: https://docs.rs/psc-nanoid/latest/psc_nanoid/struct.Nanoid.html#method.try_from_str
+[`core::str::FromStr`]: https://doc.rust-lang.org/std/str/trait.FromStr.html
 [`TryFrom<String>`]: https://doc.rust-lang.org/std/convert/trait.TryFrom.html
-[`nanoid`]: https://docs.rs/nid/latest/nid/macro.nanoid.html
-[`alphabet`]: https://docs.rs/nid/latest/nid/alphabet/index.html
-[`Nanoid`]: https://docs.rs/nid/latest/nid/struct.Nanoid.html
+[`nanoid`]: https://docs.rs/psc-nanoid/latest/psc_nanoid/macro.nanoid.html
+[`alphabet`]: https://docs.rs/psc-nanoid/latest/psc_nanoid/alphabet/index.html
+[`Nanoid`]: https://docs.rs/psc-nanoid/latest/psc_nanoid/struct.Nanoid.html
 [`serde::Serialize`]: https://docs.rs/serde/latest/serde/ser/trait.Serialize.html
 [`serde::Deserialize`]: https://docs.rs/serde/latest/serde/de/trait.Deserialize.html
 [`zeroize::Zeroize`]: https://docs.rs/zeroize/latest/zeroize/trait.Zeroize.html
@@ -117,14 +126,14 @@ at your option.
 
 Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in the work by you, as defined in the Apache-2.0 license, shall be dual licensed as above, without any additional terms or conditions.
 
-[ci badge]: https://github.com/ciffelia/nid/actions/workflows/ci.yaml/badge.svg
-[ci link]: https://github.com/ciffelia/nid/actions/workflows/ci.yaml
+[ci badge]: https://github.com/pathscale/psc-nanoid/actions/workflows/ci.yaml/badge.svg
+[ci link]: https://github.com/pathscale/psc-nanoid/actions/workflows/ci.yaml
 
-[crates.io badge]: https://img.shields.io/crates/v/nid?logo=rust
-[crates.io link]: https://crates.io/crates/nid
+[crates.io badge]: https://img.shields.io/crates/v/psc-nanoid?logo=rust
+[crates.io link]: https://crates.io/crates/psc-nanoid
 
 [docs badge]: https://img.shields.io/badge/docs-online-teal
-[docs link]: https://docs.rs/nid
+[docs link]: https://docs.rs/psc-nanoid
 
 [license badge]: https://img.shields.io/badge/license-Apache--2.0_OR_MIT-blue
 [license link]: #license
